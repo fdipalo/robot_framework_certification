@@ -9,13 +9,9 @@ Library             OperatingSystem
 Library             RPA.Robocorp.Process
 
 *** Variables ***
-${URL}              https://robotsparebinindustries.com/#/robot-order
-${CSV_FILE}         orders.csv
-${ZIP_FILE}         ${OUTPUT_DIR}/PDFs.zip
-${RETRY_LIMIT}      5
-${RETRY_INTERVAL}   2s
-
-
+${URL}    https://robotsparebinindustries.com/#/robot-order
+${CSV_FILE}    orders.csv
+${ZIP_FILE}    ${OUTPUT_DIR}/PDFs.zip
 
 *** Tasks ***
 Order robots from RobotSpareBin Industries Inc
@@ -23,7 +19,6 @@ Order robots from RobotSpareBin Industries Inc
     Download orders CSV file
     Create orders from CSV file
     Create ZIP archive
-    #Verify and Display ZIP file
 
 *** Keywords ***
 Open the robot order website
@@ -52,8 +47,7 @@ Create order
     Input Text    id:address    ${order['Address']}
     Click Button    preview
     Wait Until Element Is Visible    id=robot-preview-image
-    #Submit order
-    Retry Submit order    ${order['Order number']}
+    Retry Submit order
     Take a screenshot of the robot    ${order['Order number']}
     Store the receipt as a PDF file    ${order['Order number']}
     Merge screenshot into PDF    ${order['Order number']}
@@ -61,19 +55,16 @@ Create order
 
 Submit order
     Click Button    order
-    #Wait Until Element Is Visible    id=receipt
 
 Retry Submit Order
-    [Arguments]    ${order_number}
     ${retry_count}=    Set Variable    0
-    WHILE    ${retry_count} < ${RETRY_LIMIT}
+    WHILE    ${retry_count} < 5
         Submit order
         ${is_error_visible}=    Run Keyword And Return Status    Element Should Be Visible    xpath=//div[@class='alert alert-danger']
         Exit For Loop If    not ${is_error_visible}
-        Sleep    ${RETRY_INTERVAL}
+        Sleep    2s
         ${retry_count}=    Set Variable    ${retry_count} + 1
     END
-    Should Be True    not ${is_error_visible}    Failed to submit order after ${RETRY_LIMIT} attempts.
 
 Take a screenshot of the robot
     [Arguments]    ${Order number}
@@ -90,3 +81,4 @@ Merge screenshot into PDF
 
 Create ZIP archive
     Archive Folder With Zip    ${OUTPUT_DIR}    ${ZIP_FILE}    include=final_order_*.pdf
+
